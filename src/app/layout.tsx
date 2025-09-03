@@ -5,6 +5,8 @@ import "./globals.css";
 
 import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "@/components/ui/sonner";
+import { TRPCReactProvider } from "@/trpc/client";
+import SyncUser from "@/modules/users/components/sync-user";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,15 +29,21 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
-      <html lang="en">
-        <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        >
-          <Toaster/>
-          {children}
-        </body>
-      </html>
-    </ClerkProvider>
+  <ClerkProvider>
+    <TRPCReactProvider>
+      
+        <html lang="en">
+          <body
+            className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+          >
+
+            <Toaster/>
+            <SyncUser/>
+            {children}
+          </body>
+        </html>
+      </TRPCReactProvider>
+  </ClerkProvider>
+    
   );
 }
