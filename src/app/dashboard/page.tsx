@@ -4,6 +4,7 @@ import UploadFormInput from './upload-form-input';
 import z from 'zod';
 import { useUploadThing } from '@/utils/uploadthing';
 import { toast } from "sonner";  // ✅ import directly from sonner
+import { generateAnalysis } from '../../../actions/upload-actions';
 
 const schema = z.object({
   file: z.instanceof(File, { message: "Invalid file" })
@@ -59,6 +60,23 @@ export default function Upload() {
     toast("Processing your resume...", {
       description: "This may take a few seconds",
     });
+  
+
+    const uploadedFile = response[0];
+    const fileUrl = uploadedFile?.url;
+    const fileName = uploadedFile?.name ?? "unknown.pdf";
+
+   
+    
+
+    if (fileUrl) {
+      const analysis = await generateAnalysis({
+        fileUrl,
+        fileName,
+      
+      });
+      console.log("AI Analysis:", analysis);
+    }
   };
 
   return (
