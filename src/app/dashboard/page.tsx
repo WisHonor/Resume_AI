@@ -65,6 +65,7 @@ export default function Upload() {
     const uploadedFile = response[0];
     const fileUrl = uploadedFile?.url;
     const fileName = uploadedFile?.name ?? "unknown.pdf";
+    const userId = uploadedFile?.serverData?.userId;
 
    
     
@@ -73,8 +74,11 @@ export default function Upload() {
       const analysis = await generateAnalysis({
         fileUrl,
         fileName,
-      
+        userId,
+        jobTitle: "Doctor",
+        jobDescription: "We are looking for a doctor"
       });
+      
       console.log("AI Analysis:", analysis);
     }
   };
