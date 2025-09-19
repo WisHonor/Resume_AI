@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { LoadingSpinner } from '../components/loading';
 import { motion } from "framer-motion";
 import { UploadCloud, ArrowLeft } from "lucide-react";
+import { useUser } from "@clerk/nextjs";
 
 const schema = z.object({
     file: z.instanceof(File, { message: "Invalid file" })
@@ -21,6 +22,7 @@ const schema = z.object({
 export default function Upload() {
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const router = useRouter();
+    const { isSignedIn } = useUser();
 
     const { startUpload } = useUploadThing("pdfUploader", {
         onClientUploadComplete: () => {
@@ -39,6 +41,13 @@ export default function Upload() {
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        // Check authentication status before starting upload/analysis
+        if (!isSignedIn) {
+            toast.error("Not logged in", {
+                description: "Please sign in to analyze your resume.",
+            });
+            return;
+        }
         setIsAnalyzing(true);
 
         const formData = new FormData(e.currentTarget);
@@ -81,6 +90,15 @@ export default function Upload() {
         const fileName = uploadedFile?.name ?? "unknown.pdf";
         const userId = uploadedFile?.serverData?.userId;
 
+        // Extra safety: if upload succeeded but server reports no user
+        if (!userId) {
+            toast.error("Not logged in", {
+                description: "Please sign in to analyze your resume.",
+            });
+            setIsAnalyzing(false);
+            return;
+        }
+
         if (fileUrl) {
             try {
                 const analysis = await generateAnalysis({
@@ -92,8 +110,12 @@ export default function Upload() {
                 });
 
                 console.log("AI Analysis:", analysis);
-                router.push(`/results?data=${encodeURIComponent(JSON.stringify(analysis))}`);
-            } finally {
+                // Keep the loading overlay visible until the route transition occurs to prevent a flash of the dashboard
+                router.replace(`/results?data=${encodeURIComponent(JSON.stringify(analysis))}`);
+                return; // ensure no further code runs on this page
+            } catch (err) {
+                console.error("Analysis failed", err);
+                toast.error("Analysis failed", { description: "Please try again." });
                 setIsAnalyzing(false);
             }
         } else {

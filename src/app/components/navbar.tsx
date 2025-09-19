@@ -38,7 +38,7 @@ export const Navbar = () => {
       <div className="max-w-6xl mx-auto w-full flex justify-between items-center px-6 py-4 relative">
         
         {/* Logo with enhanced hover effects */}
-        <motion.div 
+        <motion.div
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.98 }}
           className="relative"
@@ -49,13 +49,7 @@ export const Navbar = () => {
               whileHover={{ rotate: [0, -5, 5, 0] }}
               transition={{ duration: 0.5 }}
             >
-              <Image 
-                src="/logo.png" 
-                alt="Resu Mate" 
-                width={55} 
-                height={55}
-                className="drop-shadow-lg group-hover:drop-shadow-xl transition-all duration-300"
-              />
+
               {/* Glow effect */}
               <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-blue-400 rounded-full opacity-0 group-hover:opacity-20 blur-xl transition-opacity duration-300" />
             </motion.div>
@@ -70,16 +64,17 @@ export const Navbar = () => {
 
         {/* Center Nav Links with modern styling */}
        <SignedIn>
-        <motion.div 
-          className="hidden md:flex items-center gap-4 px-4 py-2 rounded-full 
-                      backdrop-blur-md 
+           {/*
+        <motion.div
+          className="hidden md:flex items-center gap-4 px-4 py-2 rounded-full
+                      backdrop-blur-md
                     border border-white/20 shadow-lg"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, duration: 0.6 }}
         >
           {[
-            { href: "/dashboard", label: "Dashboard" },
+            { href: "/dashboard", label: "Start Uploading" },
             { href: "/pricing", label: "Pricing" }
           ].map((item, index) => (
             <motion.div
@@ -87,30 +82,31 @@ export const Navbar = () => {
               whileHover={{ scale: 1.08 }}
               whileTap={{ scale: 0.95 }}
             >
-              <Link 
-                href={item.href} 
-                className="relative px-6 py-2 rounded-full text-base font-semibold 
-                           dark:text-white 
+              <Link
+                href={item.href}
+                className="relative px-6 py-2 rounded-full text-base font-semibold
+                           dark:text-white
                           transition-all duration-300 hover:text-white group"
               >
                 <span className="relative z-10">{item.label}</span>
 
-                {/* Gradient background hover effect */}
+
                 <motion.div
-                  className="absolute inset-0 rounded-full 
-                            bg-gradient-to-r from-purple-500 to-blue-500 
+                  className="absolute inset-0 rounded-full
+                            bg-gradient-to-r from-purple-500 to-blue-500
                             opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                   whileHover={{ scale: 1.05 }}
                 />
 
-                {/* Soft glow effect */}
-                <div className="absolute inset-0 rounded-full 
-                                bg-gradient-to-r from-purple-600/40 to-blue-600/40 
+
+                <div className="absolute inset-0 rounded-full
+                                bg-gradient-to-r from-purple-600/40 to-blue-600/40
                                 opacity-0 group-hover:opacity-100 blur-md transition-opacity duration-300" />
               </Link>
             </motion.div>
           ))}
         </motion.div>
+        */}
       </SignedIn>
 
         {/* Auth Buttons with enhanced styling */}

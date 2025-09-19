@@ -13,7 +13,7 @@ export async function generateResumeAnalysis(
 ) {
   try {
     // Combine your instruction + resume text
-    const prompt = prepareInstructions({ jobTitle, jobDescription }) + "\n\nResume Content:\n" + pdfText;
+    const prompt = prepareInstructions({ jobTitle, jobDescription, resumeText: pdfText }) + "\n\nResume Content:\n" + pdfText;
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4o", // ✅ GPT-4o

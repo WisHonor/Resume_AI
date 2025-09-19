@@ -1,8 +1,11 @@
 "use client"
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMemo, useState } from "react";
-import { ChevronDown, Trophy, Target, Zap, FileText, Brain, Star } from "lucide-react";
+import { ChevronDown, Trophy, Target, Zap, FileText, Brain, Star, ArrowLeft } from "lucide-react";
+
+import { FlippableCard } from "@/components/ui/flippable-card";
+import { ClickableTip } from "@/components/ui/clickable-tip";
 
 // Enhanced Card component with glassmorphism
 function Card({ children, className = "", variant = "default" }: {
@@ -19,6 +22,7 @@ function Card({ children, className = "", variant = "default" }: {
     };
 
     return (
+
         <motion.div
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -96,16 +100,32 @@ function ScoreBadge({ score }: { score: number }) {
 
 type Tip = { type?: "good" | "improve"; tip?: string; explanation?: string };
 
-function Section({ title, score, tips, icon }: {
+function Section({ title, score, tips, examples, icon }: {
     title: string;
     score?: number;
     tips?: Tip[];
+    examples?: string[];
     icon: React.ReactNode;
 }) {
     const [expanded, setExpanded] = useState(true);
+    const [isFlipped, setIsFlipped] = useState(false);
+
+    const handleTipClick = () => {
+        setIsFlipped(true);
+    };
+
+    const handleFlip = (flipped: boolean) => {
+        setIsFlipped(flipped);
+    };
 
     return (
-        <Card variant="gradient" className="group h-full flex flex-col min-h-[260px]">
+        <FlippableCard
+            variant="gradient"
+            className="group h-full flex flex-col min-h-[600px]"
+            examples={examples || []}
+            title={`${title} - Examples & Suggestions`}
+            onFlip={handleFlip}
+        >
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
                     <motion.div
@@ -152,37 +172,18 @@ function Section({ title, score, tips, icon }: {
                         transition={{ duration: 0.3 }}
                     >
                         {Array.isArray(tips) && tips.length > 0 ? (
-                            <ul className="space-y-4">
-                                {tips.map((t, idx) => (
-                                    <motion.li
-                                        key={idx}
-                                        initial={{ opacity: 0, x: -20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: idx * 0.1 }}
-                                        className="flex items-start gap-4 p-4 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-200/50 dark:border-gray-700/50"
-                                    >
-                    <span
-                        className={`mt-1 p-1 rounded-full ${
-                            t?.type === "good"
-                                ? "bg-emerald-500 text-white"
-                                : "bg-amber-500 text-white"
-                        }`}
-                    >
-                      {t?.type === "good" ? "✓" : "!"}
-                    </span>
-                                        <div className="flex-1">
-                                            <p className="font-semibold text-gray-900 dark:text-white leading-tight">
-                                                {t?.tip ?? "Suggestion"}
-                                            </p>
-                                            {t?.explanation && (
-                                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 leading-relaxed">
-                                                    {t.explanation}
-                                                </p>
-                                            )}
-                                        </div>
-                                    </motion.li>
-                                ))}
-                            </ul>
+                            <div className="flex-1 overflow-y-auto max-h-[450px] pr-2 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
+                                <ul className="space-y-3">
+                                    {tips.map((t, idx) => (
+                                        <ClickableTip
+                                            key={idx}
+                                            tip={t}
+                                            index={idx}
+                                            onClick={handleTipClick}
+                                        />
+                                    ))}
+                                </ul>
+                            </div>
                         ) : (
                             <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                                 <FileText className="w-12 h-12 mx-auto mb-3 opacity-50" />
@@ -192,11 +193,12 @@ function Section({ title, score, tips, icon }: {
                     </motion.div>
                 )}
             </AnimatePresence>
-        </Card>
+        </FlippableCard>
     );
 }
 
 export default function ResultsPage() {
+    const router = useRouter();
     const searchParams = useSearchParams();
     const rawData = searchParams.get("data");
 
@@ -213,6 +215,16 @@ export default function ResultsPage() {
     if (!analysis) {
         return (
             <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
+                <div className="fixed top-4 left-4 z-50">
+                    <button
+                        onClick={() => router.push('/dashboard')}
+                        aria-label="Go back to home"
+                        className="inline-flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium cursor-pointer hover:text-gray-900 hover:bg-pink-400 focus:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                    >
+                        <ArrowLeft className="w-5 h-5" />
+                        <span className="hidden sm:inline">Back</span>
+                    </button>
+                </div>
                 <Card variant="glass" className="text-center max-w-md mx-auto">
                     <FileText className="w-16 h-16 mx-auto mb-4 text-gray-400" />
                     <h1 className="text-2xl font-bold mb-2 text-gray-900 dark:text-white">No Analysis Found</h1>
@@ -223,17 +235,27 @@ export default function ResultsPage() {
     }
 
     const sections = [
-        { key: "ATS", title: "ATS Compatibility", score: analysis?.ATS?.score, tips: analysis?.ATS?.tips, icon: <Target className="w-5 h-5" /> },
-        { key: "toneAndStyle", title: "Tone & Style", score: analysis?.toneAndStyle?.score, tips: analysis?.toneAndStyle?.tips, icon: <Brain className="w-5 h-5" /> },
-        { key: "content", title: "Content Quality", score: analysis?.content?.score, tips: analysis?.content?.tips, icon: <Star className="w-5 h-5" /> },
-        { key: "structure", title: "Structure & Formatting", score: analysis?.structure?.score, tips: analysis?.structure?.tips, icon: <FileText className="w-5 h-5" /> },
-        { key: "skills", title: "Skills Alignment", score: analysis?.skills?.score, tips: analysis?.skills?.tips, icon: <Zap className="w-5 h-5" /> },
+        { key: "ATS", title: "ATS Compatibility", score: analysis?.ATS?.score, tips: analysis?.ATS?.tips, examples: analysis?.ATS?.examples, icon: <Target className="w-5 h-5" /> },
+        { key: "toneAndStyle", title: "Tone & Style", score: analysis?.toneAndStyle?.score, tips: analysis?.toneAndStyle?.tips, examples: analysis?.toneAndStyle?.examples, icon: <Brain className="w-5 h-5" /> },
+        { key: "content", title: "Content Quality", score: analysis?.content?.score, tips: analysis?.content?.tips, examples: analysis?.content?.examples, icon: <Star className="w-5 h-5" /> },
+        { key: "structure", title: "Structure & Formatting", score: analysis?.structure?.score, tips: analysis?.structure?.tips, examples: analysis?.structure?.examples, icon: <FileText className="w-5 h-5" /> },
+        { key: "skills", title: "Skills Alignment", score: analysis?.skills?.score, tips: analysis?.skills?.tips, examples: analysis?.skills?.examples, icon: <Zap className="w-5 h-5" /> },
     ];
 
     const overall = Number.isFinite(analysis?.overallScore) ? Math.round(analysis.overallScore) : undefined;
 
     return (
         <div className="min-h-screen bg-gradient-to-br  dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+            <div className="fixed top-4 left-4 z-50">
+                <button
+                    onClick={() => router.push('/')}
+                    aria-label="Go back to home"
+                    className="inline-flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium cursor-pointer hover:text-gray-900 hover:bg-pink-400 focus:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                >
+                    <ArrowLeft className="w-5 h-5" />
+                    <span className="hidden sm:inline">Back</span>
+                </button>
+            </div>
             {/* Animated background elements */}
             <div className="fixed inset-0 overflow-hidden pointer-events-none">
                 <motion.div
@@ -248,7 +270,7 @@ export default function ResultsPage() {
                 />
             </div>
 
-            <div className="relative z-10 p-6 md:p-10 max-w-7xl mx-auto">
+            <div className="relative z-10 p-6 md:p-10 max-w-[1400px] mx-auto">
                 {/* Header */}
                 <motion.div
                     initial={{ opacity: 0, y: -30 }}
@@ -342,7 +364,7 @@ export default function ResultsPage() {
                         hidden: { opacity: 0 },
                         show: { opacity: 1, transition: { staggerChildren: 0.1 } },
                     }}
-                    className="grid grid-cols-1 lg:grid-cols-2 items-stretch auto-rows-fr gap-8"
+                    className="grid grid-cols-1 xl:grid-cols-2 items-stretch auto-rows-fr gap-10"
                 >
                     {sections.map((s, idx) => {
                         const isLastOdd = sections.length % 2 === 1 && idx === sections.length - 1;
@@ -354,12 +376,13 @@ export default function ResultsPage() {
                                     hidden: { opacity: 0, y: 30 },
                                     show: { opacity: 1, y: 0 },
                                 }}
-                                className={`h-full flex flex-col ${isLastOdd ? "lg:col-span-2" : ""}`}
+                                className={`h-full flex flex-col ${isLastOdd ? "xl:col-span-2" : ""}`}
                             >
                                 <Section
                                     title={s.title}
                                     score={s.score as number | undefined}
                                     tips={s.tips as Tip[]}
+                                    examples={s.examples as string[]}
                                     icon={s.icon}
                                 />
                             </motion.div>
