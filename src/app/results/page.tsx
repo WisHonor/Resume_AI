@@ -1,7 +1,7 @@
 "use client"
 import { useSearchParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { useMemo, useState } from "react";
+import { useMemo, useState, Suspense } from "react";
 import { ChevronDown, Trophy, Target, Zap, FileText, Brain, Star, ArrowLeft } from "lucide-react";
 
 import { FlippableCard } from "@/components/ui/flippable-card";
@@ -197,16 +197,97 @@ function Section({ title, score, tips, examples, icon }: {
     );
 }
 
-export default function ResultsPage() {
+function ResultsPageInner() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const rawData = searchParams.get("data");
 
     const analysis = useMemo(() => {
         try {
-            const parsed = rawData ? JSON.parse(rawData) : null;
-            return parsed?.data?.aiFeedback?.data ?? null;
-        } catch {
+            // Prefer query param if provided; otherwise fall back to sessionStorage
+            const source = rawData ?? (typeof window !== 'undefined' ? sessionStorage.getItem('latestAnalysis') : null);
+            const parsed = source ? JSON.parse(source) : null;
+
+            // aiFeedback may be:
+            //  - { success: true, data: { ...analysis... } }
+            //  - { success: false, data: string } (raw text that might still be JSON)
+            //  - Already the analysis object
+            let payload: any = parsed?.data?.aiFeedback ?? null;
+            let obj: any = null;
+
+            const tryParse = (val: any) => {
+                if (typeof val !== 'string') return val;
+                let txt = val.trim();
+                // strip common code fences
+                if (txt.startsWith('```')) {
+                    txt = txt.replace(/^```json\s*/i, '').replace(/^```\s*/i, '');
+                    if (txt.endsWith('```')) txt = txt.slice(0, -3);
+                }
+                try { return JSON.parse(txt); } catch { return null; }
+            };
+
+            if (payload) {
+                if (typeof payload === 'object' && payload !== null) {
+                    if ('data' in payload) {
+                        obj = tryParse((payload as any).data) ?? (payload as any).data;
+                    } else {
+                        obj = payload; // assume it's already the analysis object
+                    }
+                } else if (typeof payload === 'string') {
+                    obj = tryParse(payload);
+                }
+            }
+
+            // Fallback: some callers might have stored only the aiFeedback.data
+            if (!obj && parsed?.data?.aiFeedback?.data) {
+                obj = tryParse(parsed.data.aiFeedback.data) ?? parsed.data.aiFeedback.data;
+            }
+
+            if (!obj || typeof obj !== 'object') return null;
+
+            // Normalize section keys and shapes
+            const norm = (input: any) => {
+                const get = (o: any, keys: string[]) => keys.find(k => o && k in o) ? o[keys.find(k => k in o)!] : undefined;
+                const toArray = (v: any) => Array.isArray(v) ? v : (v == null ? [] : [v]);
+
+                const ATS = get(input, ['ATS', 'ats', 'Ats']);
+                const tone = get(input, ['toneAndStyle', 'tone_and_style', 'tone', 'style']);
+                const content = get(input, ['content']);
+                const structure = get(input, ['structure', 'formatting', 'format']);
+                const skills = get(input, ['skills', 'skillAlignment', 'skillsAlignment']);
+
+                const normalizeSection = (s: any) => {
+                    if (!s || typeof s !== 'object') return undefined;
+                    const tipsRaw = get(s, ['tips', 'advice', 'recommendations', 'suggestions']);
+                    const examplesRaw = get(s, ['examples', 'example', 'samples']);
+                    // Coerce simple string tips to expected shape
+                    const tips = toArray(tipsRaw).map((t: any) => {
+                        if (typeof t === 'string') return { type: 'improve', tip: t };
+                        if (t && typeof t === 'object') {
+                            return { type: t.type ?? 'improve', tip: t.tip ?? String(t.explanation ?? ''), explanation: t.explanation };
+                        }
+                        return undefined;
+                    }).filter(Boolean);
+                    const examples = toArray(examplesRaw).map((e: any) => typeof e === 'string' ? e : JSON.stringify(e));
+                    const score = Number.isFinite(s.score) ? Math.round(s.score) : undefined;
+                    return { score, tips, examples };
+                };
+
+                const overallScore = Number.isFinite(input.overallScore) ? Math.round(input.overallScore) : (Number.isFinite(input.overall) ? Math.round(input.overall) : undefined);
+
+                return {
+                    overallScore,
+                    ATS: normalizeSection(ATS),
+                    toneAndStyle: normalizeSection(tone),
+                    content: normalizeSection(content),
+                    structure: normalizeSection(structure),
+                    skills: normalizeSection(skills),
+                };
+            };
+
+            return norm(obj);
+        } catch (e) {
+            console.warn('Failed to parse analysis payload', e);
             return null;
         }
     }, [rawData]);
@@ -242,7 +323,7 @@ export default function ResultsPage() {
         { key: "skills", title: "Skills Alignment", score: analysis?.skills?.score, tips: analysis?.skills?.tips, examples: analysis?.skills?.examples, icon: <Zap className="w-5 h-5" /> },
     ];
 
-    const overall = Number.isFinite(analysis?.overallScore) ? Math.round(analysis.overallScore) : undefined;
+    const overall = (typeof analysis?.overallScore === 'number' && Number.isFinite(analysis.overallScore)) ? Math.round(analysis.overallScore) : undefined;
 
     return (
         <div className="min-h-screen bg-gradient-to-br  dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
@@ -393,5 +474,13 @@ export default function ResultsPage() {
 
             </div>
         </div>
+    );
+}
+
+export default function ResultsPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen bg-gradient-to-br dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center"><div className="text-gray-600 dark:text-gray-300">Loading results…</div></div>}>
+            <ResultsPageInner />
+        </Suspense>
     );
 }

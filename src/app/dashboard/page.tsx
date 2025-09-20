@@ -110,8 +110,16 @@ export default function Upload() {
                 });
 
                 console.log("AI Analysis:", analysis);
-                // Keep the loading overlay visible until the route transition occurs to prevent a flash of the dashboard
-                router.replace(`/results?data=${encodeURIComponent(JSON.stringify(analysis))}`);
+                // Store analysis in sessionStorage to avoid long URLs that can trigger HTTP 431
+                if (typeof window !== 'undefined') {
+                    try {
+                        sessionStorage.setItem('latestAnalysis', JSON.stringify(analysis));
+                    } catch (e) {
+                        console.warn('Failed to store analysis in sessionStorage', e);
+                    }
+                }
+                // Navigate without large query strings
+                router.replace(`/results`);
                 return; // ensure no further code runs on this page
             } catch (err) {
                 console.error("Analysis failed", err);
