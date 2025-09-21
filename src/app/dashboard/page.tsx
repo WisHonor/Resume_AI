@@ -90,7 +90,7 @@ export default function Upload() {
         const fileName = uploadedFile?.name ?? "unknown.pdf";
         const userId = uploadedFile?.serverData?.userId;
 
-        // Extra safety: if upload succeeded but server reports no user
+        // Extra safety: if upload succeeded but server reports no user 1
         if (!userId) {
             toast.error("Not logged in", {
                 description: "Please sign in to analyze your resume.",
