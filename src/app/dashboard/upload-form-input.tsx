@@ -26,7 +26,7 @@ export default function UploadFormInput ({onSubmit}: UploadFormInputProps)  {
             <label htmlFor='file' className='text-sm font-medium text-white'>Resume (PDF)</label>
             <Input id='file' type="file" name='file' accept='application/pdf' required className='mt-2' />
           </div>
-          <Button type='submit' className='w-full md:w-auto self-stretch md:self-auto'>Start AI Analysis</Button>
+          <Button type='submit' className='w-full md:w-auto self-stretch md:self-auto cursor-pointer bg-pink-500 hover:bg-pink-600 text-white shadow-lg hover:shadow-xl transition-all duration-200'>Start AI Analysis</Button>
         </div>
     </form>
   )

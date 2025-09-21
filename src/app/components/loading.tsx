@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 
 export function LoadingSpinner() {
   return (
-    <div className="fixed inset-0 flex flex-col items-center justify-center bg-gradient-to-br  from-gray-900 via-gray-800 to-gray-900 z-50">
+    <div className="fixed inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 z-50">
       {/* Glowing Scanner */}
       <motion.div
         animate={{ y: [0, 20, 0] }}

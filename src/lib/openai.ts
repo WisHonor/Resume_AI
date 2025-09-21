@@ -27,7 +27,7 @@ export async function generateResumeAnalysis(
           content: prompt
         }
       ],
-      max_completion_tokens: 2000, // Adjust based on resume length
+      max_completion_tokens: 6000, // Adjust based on resume length
       response_format: { type: "json_object" }, // ✅ Forces JSON output
     });
 

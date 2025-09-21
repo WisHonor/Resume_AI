@@ -110,8 +110,10 @@ export default function Upload() {
                 });
 
                 console.log("AI Analysis:", analysis);
+                // Store analysis in sessionStorage to avoid URL length limits
+                sessionStorage.setItem('resumeAnalysis', JSON.stringify(analysis));
                 // Keep the loading overlay visible until the route transition occurs to prevent a flash of the dashboard
-                router.replace(`/results?data=${encodeURIComponent(JSON.stringify(analysis))}`);
+                router.replace('/results');
                 return; // ensure no further code runs on this page
             } catch (err) {
                 console.error("Analysis failed", err);

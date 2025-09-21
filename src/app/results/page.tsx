@@ -1,7 +1,9 @@
 "use client"
-import { useSearchParams, useRouter } from "next/navigation";
+export const dynamic = "force-dynamic";
+
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { useMemo, useState } from "react";
+import { useState, useEffect } from "react";
 import { ChevronDown, Trophy, Target, Zap, FileText, Brain, Star, ArrowLeft } from "lucide-react";
 
 import { FlippableCard } from "@/components/ui/flippable-card";
@@ -197,24 +199,30 @@ function Section({ title, score, tips, examples, icon }: {
     );
 }
 
-export default function ResultsPage() {
+function ResultsPageInner() {
     const router = useRouter();
-    const searchParams = useSearchParams();
-    const rawData = searchParams.get("data");
+    const [analysis, setAnalysis] = useState<any>(null);
 
-    const analysis = useMemo(() => {
-        try {
-            const parsed = rawData ? JSON.parse(rawData) : null;
-            return parsed?.data?.aiFeedback?.data ?? null;
-        } catch {
-            return null;
+    useEffect(() => {
+        // Get analysis data from sessionStorage
+        const storedAnalysis = sessionStorage.getItem('resumeAnalysis');
+        if (storedAnalysis) {
+            try {
+                const parsed = JSON.parse(storedAnalysis);
+                setAnalysis(parsed?.data?.aiFeedback?.data ?? null);
+                // Clear the data after using it to prevent stale data
+                sessionStorage.removeItem('resumeAnalysis');
+            } catch (error) {
+                console.error('Failed to parse stored analysis:', error);
+                setAnalysis(null);
+            }
         }
-    }, [rawData]);
+    }, []);
 
 
     if (!analysis) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
+            <div className="min-h-screen flex items-center justify-center">
                 <div className="fixed top-4 left-4 z-50">
                     <button
                         onClick={() => router.push('/dashboard')}
@@ -245,7 +253,7 @@ export default function ResultsPage() {
     const overall = Number.isFinite(analysis?.overallScore) ? Math.round(analysis.overallScore) : undefined;
 
     return (
-        <div className="min-h-screen bg-gradient-to-br  dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        <div className="min-h-screen">
             <div className="fixed top-4 left-4 z-50">
                 <button
                     onClick={() => router.push('/')}
@@ -394,4 +402,8 @@ export default function ResultsPage() {
             </div>
         </div>
     );
+}
+
+export default function ResultsPage() {
+  return <ResultsPageInner />;
 }
