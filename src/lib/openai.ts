@@ -27,40 +27,24 @@ export async function generateResumeAnalysis(
           content: prompt
         }
       ],
-      max_completion_tokens: 6000, // Increased for comprehensive analysis with 12+ tips and 20+ examples per section
+      max_completion_tokens: 2000, // Adjust based on resume length
       response_format: { type: "json_object" }, // ✅ Forces JSON output
     });
 
     const content = completion.choices[0]?.message?.content ?? "";
 
     try {
-      const parsedData = JSON.parse(content);
       return {
         success: true,
         message: "AI analysis generated successfully",
-        data: parsedData,
+        data: JSON.parse(content), // ✅ Parse JSON safely
       };
     } catch (jsonErr) {
-      console.error("JSON Parse Error:", jsonErr);
-      console.error("Raw AI Response (first 1000 chars):", content.substring(0, 1000));
-      console.error("Raw AI Response (last 500 chars):", content.substring(Math.max(0, content.length - 500)));
-      console.error("Response length:", content.length);
-
-      // Try to identify if it's a truncation issue
-      const isTruncated = !content.trim().endsWith('}') && !content.trim().endsWith(']');
-      const errorMessage = isTruncated
-        ? "AI response was truncated - increase token limit"
-        : "AI returned invalid JSON format";
-
+      console.error("JSON Parse Error:", content);
       return {
         success: false,
-        message: errorMessage,
-        data: {
-          error: errorMessage,
-          rawResponse: content.substring(0, 500) + "...", // First 500 chars for debugging
-          responseLength: content.length,
-          isTruncated
-        },
+        message: "AI returned invalid JSON",
+        data: content, // Return raw output for debugging
       };
     }
   } catch (error: any) {
