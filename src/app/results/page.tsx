@@ -248,8 +248,8 @@ export default function ResultsPage() {
         <div className="min-h-screen bg-gradient-to-br  dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
             <div className="fixed top-4 left-4 z-50">
                 <button
-                    onClick={() => router.push('/dashboard')}
-                    aria-label="Go back to dashboard"
+                    onClick={() => router.push('/')}
+                    aria-label="Go back to home"
                     className="inline-flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium cursor-pointer hover:text-gray-900 hover:bg-pink-400 focus:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
                 >
                     <ArrowLeft className="w-5 h-5" />
