@@ -4,14 +4,15 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
+    "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "vercel-build": "prisma generate && next build"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.31.6",
-    "@hookform/resolvers": "^5.2.1",
+    "@hookform/resolvers": "^3.9.1",
     "@langchain/community": "^0.3.54",
     "@langchain/core": "^0.3.73",
     "@prisma/client": "^6.15.0",
@@ -71,7 +72,12 @@
     "tailwind-merge": "^3.3.1",
     "uploadthing": "^7.7.4",
     "vaul": "^1.1.2",
-    "zod": "^4.1.5"
+    "zod": "^3.23.8",
+    "openai": "^4.73.1",
+    "pdfjs-dist": "^4.10.38"
+  },
+  "overrides": {
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
